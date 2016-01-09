@@ -699,9 +699,6 @@ a.add-to-wallabag-link-after:after {
   -moz-osx-font-smoothing: grayscale;
 }
 
-.icon-flattr:before {
-  content: "\e800";
-}
 .icon-mail:before {
   content: "\e80a";
 }
