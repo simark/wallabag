@@ -166,6 +166,13 @@ class EntryController extends Controller
      */
     public function showUnreadAction(Request $request, $page)
     {
+        // load the quickstart if no entry in database
+        $repository = $this->getDoctrine()->getRepository('WallabagCoreBundle:Entry');
+
+        if ($page == 1 && $repository->countAllEntriesByUsername($this->getUser()->getId()) == 0) {
+            return $this->redirect($this->generateUrl('quickstart'));
+        }
+
         return $this->showEntries('unread', $request, $page);
     }
 
