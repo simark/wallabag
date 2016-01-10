@@ -28,7 +28,7 @@ class AuthCodeMailerTest extends \PHPUnit_Framework_TestCase
 {
     protected $mailer;
     protected $spool;
-    protected $dataCollector;
+    protected $twig;
 
     protected function setUp()
     {
@@ -39,14 +39,11 @@ class AuthCodeMailerTest extends \PHPUnit_Framework_TestCase
         );
         $this->mailer = new \Swift_Mailer($transport);
 
-        $translator = new Translator('en');
-        $translator->addLoader('array', new ArrayLoader());
-        $translator->addResource('array', array(
-            'auth_code.mailer.subject' => 'auth_code subject',
-            'auth_code.mailer.body' => 'Hi %user%, here is the code: %code% and the support: %support%',
-        ), 'en', 'wallabag_user');
-
-        $this->dataCollector = new DataCollectorTranslator($translator);
+        $this->twig = new \Twig_Environment(new \Twig_Loader_Array(array('@WallabagUserBundle/Resources/views/TwoFactor/email_auth_code.html.twig' => '
+{% block subject %}subject{% endblock %}
+{% block body_html %}html body{% endblock %}
+{% block body_text %}text body{% endblock %}
+')));
     }
 
     public function testSendEmail()
@@ -59,7 +56,7 @@ class AuthCodeMailerTest extends \PHPUnit_Framework_TestCase
 
         $authCodeMailer = new AuthCodeMailer(
             $this->mailer,
-            $this->dataCollector,
+            $this->twig,
             'nobody@test.io',
             'wallabag test',
             'http://0.0.0.0'
@@ -72,7 +69,8 @@ class AuthCodeMailerTest extends \PHPUnit_Framework_TestCase
         $msg = $this->spool->getMessages()[0];
         $this->assertArrayHasKey('test@wallabag.io', $msg->getTo());
         $this->assertEquals(array('nobody@test.io' => 'wallabag test'), $msg->getFrom());
-        $this->assertEquals('auth_code subject', $msg->getSubject());
-        $this->assertContains('Hi Bob, here is the code: 666666 and the support: http://0.0.0.0', $msg->toString());
+        $this->assertEquals('subject', $msg->getSubject());
+        $this->assertContains('text body', $msg->toString());
+        $this->assertContains('html body', $msg->toString());
     }
 }
